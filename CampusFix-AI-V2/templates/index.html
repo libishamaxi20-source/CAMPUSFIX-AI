@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CampusFix AI - Smart Campus Issue Reporting</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+  <!-- HEADER / NAVIGATION -->
+  <header>
+    <div class="logo">⚡ CampusFix AI</div>
+    <nav>
+      <button class="nav-btn active" onclick="switchTab('home', event)">Home</button>
+      <button class="nav-btn" onclick="switchTab('report', event)">Report Issue</button>
+      <button class="nav-btn" onclick="switchTab('dashboard', event)">Student Dashboard</button>
+      <button class="nav-btn" onclick="switchTab('admin', event)">Staff Command Center</button>
+    </nav>
+  </header>
+
+  <div class="container">
+
+    <!-- V1 TAB 1: LANDING PAGE / HOME -->
+    <section id="tab-home" class="tab-content active">
+      <div class="hero-section glass-card" style="text-align: center; padding: 60px 20px;">
+        <span class="badge badge-low" style="margin-bottom: 16px; display: inline-block;">AI-POWERED RESOLUTION PLATFORM</span>
+        <h1 style="font-size: 2.8rem; font-weight: 800; margin-bottom: 16px;">
+          Fast, Automated Campus Maintenance & Issue Resolution
+        </h1>
+        <p style="color: var(--text-secondary); max-width: 650px; margin: 0 auto 30px auto; font-size: 1.1rem; line-height: 1.6;">
+          Report broken equipment, facility damage, or sanitation needs instantly. Our automated AI triage analyzes, prioritizes, and routes issues directly to campus staff in seconds.
+        </p>
+        <div style="display: flex; gap: 16px; justify-content: center;">
+          <button class="btn-primary" style="width: auto; padding: 14px 32px;" onclick="switchTab('report')">Report an Issue Now</button>
+          <button class="nav-btn" style="padding: 14px 28px;" onclick="switchTab('admin')">Staff Login</button>
+        </div>
+      </div>
+
+      <!-- FEATURES GRID -->
+      <div class="issue-grid" style="margin-top: 30px;">
+        <div class="glass-card">
+          <h3 style="color: var(--accent-cyan); margin-bottom: 10px;">✨ Instant AI Triage</h3>
+          <p style="color: var(--text-secondary); font-size: 0.95rem;">Automatically analyzes descriptions to tag high-priority academic hazards like exam disruption or lab outages.</p>
+        </div>
+        <div class="glass-card">
+          <h3 style="color: var(--accent-purple); margin-bottom: 10px;">🎯 Smart Department Routing</h3>
+          <p style="color: var(--text-secondary); font-size: 0.95rem;">Directs reports straight to IT, Facilities, Electrical, or Housekeeping teams without manual dispatcher delay.</p>
+        </div>
+        <div class="glass-card">
+          <h3 style="color: var(--success); margin-bottom: 10px;">📊 Live Status Tracking</h3>
+          <p style="color: var(--text-secondary); font-size: 0.95rem;">Students get transparent lifecycle updates from initial submission through resolution.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- V2 TAB 2: REPORT ISSUE FORM & LIVE AI TRIAGE -->
+    <section id="tab-report" class="tab-content">
+      <div class="glass-card">
+        <h2>Report a Campus Issue</h2>
+        <p style="color: var(--text-secondary); margin-bottom: 20px;">
+          Submit details below. The backend AI engine will parse your request, assign priority, and store it in the database.
+        </p>
+
+        <form id="issueForm">
+          <div class="form-group">
+            <label for="title">Issue Title</label>
+            <input type="text" id="title" placeholder="e.g., Projector not working" required>
+          </div>
+
+          <div class="form-group">
+            <label for="location">Location</label>
+            <input type="text" id="location" placeholder="e.g., Computer Lab 03" required>
+          </div>
+
+          <div class="form-group">
+            <label for="description">Detailed Description</label>
+            <textarea id="description" rows="4" placeholder="e.g., The projector is not displaying output and we have a practical exam tomorrow." required></textarea>
+          </div>
+
+          <button type="submit" class="btn-primary">Submit Issue</button>
+        </form>
+
+        <div id="aiTriageResult" class="ai-triage-box">
+          <h3 style="color: var(--accent-cyan); margin-bottom: 8px;">✨ AI Triage Complete</h3>
+          <p><strong>Category:</strong> <span id="triageCategory"></span></p>
+          <p><strong>Assigned Department:</strong> <span id="triageDepartment"></span></p>
+          <p><strong>Calculated Priority:</strong> <span id="triagePriority"></span></p>
+          <p><strong>Database Status:</strong> <span style="color: var(--success);">Submitted</span></p>
+        </div>
+      </div>
+    </section>
+
+    <!-- V2 TAB 3: STUDENT DASHBOARD -->
+    <section id="tab-dashboard" class="tab-content">
+      <div class="glass-card">
+        <h2>Student Tracking Dashboard</h2>
+        <p style="color: var(--text-secondary);">Real-time status updates from the SQLite database.</p>
+        <div id="studentIssuesList" class="issue-grid"></div>
+      </div>
+    </section>
+
+    <!-- V2 TAB 4: STAFF COMMAND CENTER -->
+    <section id="tab-admin" class="tab-content">
+      <div class="glass-card">
+        <h2>Staff Command Center</h2>
+        <p style="color: var(--text-secondary);">Manage reports and update real-time database statuses.</p>
+        <div id="adminIssuesList" class="issue-grid"></div>
+      </div>
+    </section>
+
+  </div>
+
+  <script>
+    function switchTab(tabName, evt) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
+
+      document.getElementById(`tab-${tabName}`).classList.add('active');
+
+      if (evt && evt.target) {
+        evt.target.classList.add('active');
+      } else {
+        const btn = Array.from(document.querySelectorAll('.nav-btn')).find(b => b.textContent.toLowerCase().includes(tabName));
+        if (btn) btn.classList.add('active');
+      }
+
+      if (tabName === 'dashboard' || tabName === 'admin') {
+        loadIssues();
+      }
+    }
+
+    // Submit Issue Handler
+    document.getElementById('issueForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const payload = {
+        title: document.getElementById('title').value,
+        location: document.getElementById('location').value,
+        description: document.getElementById('description').value
+      };
+
+      const res = await fetch('/api/issues', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        const issue = data.issue;
+
+        document.getElementById('triageCategory').innerText = issue.category;
+        document.getElementById('triageDepartment').innerText = issue.department;
+        document.getElementById('triagePriority').innerText = issue.priority;
+        document.getElementById('aiTriageResult').classList.add('active');
+
+        document.getElementById('issueForm').reset();
+      } else {
+        alert('Failed to submit issue. Please check all fields.');
+      }
+    });
+
+    // Load Issues API
+    async function loadIssues() {
+      const res = await fetch('/api/issues');
+      const issues = await res.json();
+
+      // Student Dashboard Render
+      const studentContainer = document.getElementById('studentIssuesList');
+      if (issues.length === 0) {
+        studentContainer.innerHTML = '<p style="color: var(--text-secondary);">No issues submitted yet.</p>';
+      } else {
+        studentContainer.innerHTML = issues.map(item => `
+          <div class="issue-card">
+            <div>
+              <div class="issue-header">
+                <span class="issue-title">${item.title}</span>
+                <span class="badge badge-${item.priority.toLowerCase()}">${item.priority}</span>
+              </div>
+              <div class="issue-meta">📍 ${item.location} | 📂 ${item.category}</div>
+              <p style="font-size: 0.9rem; color: #cbd5e1; margin-bottom: 12px;">${item.description}</p>
+            </div>
+            <div>
+              <div class="issue-meta">Department: <strong>${item.department}</strong></div>
+              <div class="issue-meta">Status: <strong style="color: var(--accent-cyan);">${item.status}</strong></div>
+            </div>
+          </div>
+        `).join('');
+      }
+
+      // Staff Command Center Render
+      const adminContainer = document.getElementById('adminIssuesList');
+      if (issues.length === 0) {
+        adminContainer.innerHTML = '<p style="color: var(--text-secondary);">No issues submitted yet.</p>';
+      } else {
+        adminContainer.innerHTML = issues.map(item => `
+          <div class="issue-card">
+            <div>
+              <div class="issue-header">
+                <span class="issue-title">#${item.id} - ${item.title}</span>
+                <span class="badge badge-${item.priority.toLowerCase()}">${item.priority}</span>
+              </div>
+              <div class="issue-meta">📍 ${item.location} | 🏢 ${item.department}</div>
+              <p style="font-size: 0.9rem; color: #cbd5e1; margin-bottom: 12px;">${item.description}</p>
+            </div>
+            <div>
+              <label style="font-size:0.75rem;">UPDATE STATUS</label>
+              <select class="status-select" onchange="updateStatus(${item.id}, this.value)">
+                <option value="Submitted" ${item.status === 'Submitted' ? 'selected' : ''}>Submitted</option>
+                <option value="Assigned" ${item.status === 'Assigned' ? 'selected' : ''}>Assigned</option>
+                <option value="In Progress" ${item.status === 'In Progress' ? 'selected' : ''}>In Progress</option>
+                <option value="Resolved" ${item.status === 'Resolved' ? 'selected' : ''}>Resolved</option>
+              </select>
+            </div>
+          </div>
+        `).join('');
+      }
+    }
+
+    async function updateStatus(id, newStatus) {
+      await fetch(`/api/issues/${id}/status`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus })
+      });
+      loadIssues();
+    }
+  </script>
+</body>
+</html>
